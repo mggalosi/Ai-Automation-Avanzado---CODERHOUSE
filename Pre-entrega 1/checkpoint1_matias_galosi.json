@@ -1,0 +1,166 @@
+{
+  "name": "checkpoint1_matias_galosi",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "a3c825b4-daa0-4efd-9dab-11c35a7691ce",
+      "name": "Chat Trigger",
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        240,
+        528
+      ],
+      "webhookId": "210117b0-2ff6-48b4-8162-9582f9091a84"
+    },
+    {
+      "parameters": {
+        "model": "gpt-4o",
+        "options": {}
+      },
+      "id": "a1412f74-5a6d-4f76-aa91-e7c9cfa629af",
+      "name": "OpenAI Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1,
+      "position": [
+        472,
+        752
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "ccks2LnpbfRkzAFP",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Usá esta herramienta para enviar un correo electrónico interno (a la casilla personal del responsable del emprendimiento, usada por el momento como canal único de notificación) cuando la consulta del cliente requiera intervención humana antes de confirmarse. Activá esta herramienta de forma autónoma en los siguientes casos de negocio:\n(1) el cliente quiere comprar un juego de mesa y pregunta cómo pagar o coordinar el retiro/envío: el equipo debe contactarlo para cerrar los detalles de la compra;\n(2) el cliente presenta un reclamo, una queja sobre un producto o servicio, o plantea una situación que queda fuera de tu ámbito de respuesta automática.\nNo uses esta herramienta para consultas puramente informativas que ya podés responder vos mismo con la información de tu contexto (por ejemplo, preguntas generales sobre qué tipo de juegos vende el local, precios ya cargados, o el horario de atención), para evitar generar ruido innecesario en la bandeja de entrada del equipo.",
+        "sendTo": "galosi.matias@gmail.com",
+        "subject": "={{ $fromAI('asunto', 'Asunto breve que resuma el motivo de la notificación', 'string') }}",
+        "message": "={{ $fromAI('cuerpo', 'Cuerpo del correo con el detalle de la consulta del cliente y la acción sugerida', 'string') }}",
+        "options": {}
+      },
+      "id": "2e6527b8-13c7-456f-98fc-e26e4dc55b8a",
+      "name": "Gmail Tool - Notificar Equipo",
+      "type": "n8n-nodes-base.gmailTool",
+      "typeVersion": 2.1,
+      "position": [
+        600,
+        752
+      ],
+      "webhookId": "e81f3db9-261a-489d-8a78-8f0b11ea3411",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "blKdTkdZWepMlgiq",
+          "name": "Gmail account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.chatInput }}",
+        "options": {
+          "systemMessage": "# ROL\nSos el Agente de Atención Comercial de Bucle Ludoteca, una tienda de juegos de mesa localizada en la ciudad de Berisso. Sos la primera línea de atención a consultas de clientes que llegan por chat o mensaje.\n\n# ÁMBITO\nAtendés únicamente consultas relacionadas con:\n- Catálogo y disponibilidad de juegos de mesa (solo venta).\n- Precios vigentes que tengas cargados en tu contexto.\n- Consultas generales sobre horarios y ubicación del local.\n\nNo atendés reclamos de pagos ni disputas legales, no das soporte técnico de otros productos, y no opinás ni actuás sobre temas ajenos al rubro de juegos de mesa.\n\n# OBJETIVO\n1. Identificar la intención comercial del cliente (consulta informativa, pedido de compra).\n2. Responder con la información que tengas disponible en tu contexto, sin inventar datos de stock, precios o fechas.\n3. Cuando la consulta implique un pedido concreto o cualquier caso que requiera confirmación humana, notificar por correo al equipo de Bucle Ludoteca usando la herramienta de Gmail disponible.\n\n# REGLAS Y ESCALAMIENTO\n- Nunca confirmes una compra en nombre de Bucle Ludoteca: solo podés avisar por mail para que un humano confirme.\n- Nunca inventes precios, stock o disponibilidad que no te hayan sido provistos explícitamente en el contexto de la conversación.\n- Si la consulta es ambigua, pedile al cliente una aclaración antes de actuar.\n- Si detectás una queja, un reclamo o una situación fuera de tu ámbito, escalá notificando por mail sin intentar resolverla vos mismo.\n- Redactá siempre en español formal, sin desdoblamientos de lenguaje inclusivo (nada de \"todos/as\", \"elles\", \"amigues\"); usá el masculino genérico estándar o formulaciones neutras convencionales.\n- Tenés un límite estricto de 5 iteraciones de razonamiento por consulta. Si lo alcanzás sin resolver el caso, notificá por mail que la consulta requiere intervención humana.",
+          "maxIterations": 5,
+          "returnIntermediateSteps": true
+        }
+      },
+      "id": "93bbecda-55e2-4a9e-876d-cbf4d2818cc9",
+      "name": "AI Agent - Bucle Ludoteca",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        464,
+        528
+      ]
+    },
+    {
+      "parameters": {
+        "sendTo": "galosi.matias@gmail.com",
+        "subject": "Tarea completada - Agente Bucle Ludoteca",
+        "message": "=Tarea completada por el Agente de Atención Comercial de Bucle Ludoteca.\\n\\nConsulta recibida: {{ $('Chat Trigger').item.json.chatInput }}\\n\\nRespuesta / resultado del agente:\\n{{ $json.output }}\\n\\nEste mensaje es un reporte automático de observabilidad (Execution Log) para supervisión humana.",
+        "options": {}
+      },
+      "id": "12e84560-d47d-4f1a-9690-40782fb32be0",
+      "name": "Gmail - Log de Auditoría",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        816,
+        528
+      ],
+      "webhookId": "9a83f348-0d4a-41b4-9b15-9cd836961990",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "blKdTkdZWepMlgiq",
+          "name": "Gmail account 2"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Chat Trigger": {
+      "main": [
+        [
+          {
+            "node": "AI Agent - Bucle Ludoteca",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent - Bucle Ludoteca",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail Tool - Notificar Equipo": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent - Bucle Ludoteca",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent - Bucle Ludoteca": {
+      "main": [
+        [
+          {
+            "node": "Gmail - Log de Auditoría",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "6d916fd3-e4c2-405a-b5d5-f9a3549a9b06",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b0ddea4295fa60ac9ca4ef686c97a7674f0bef313ede7cd078ccd283326b251e"
+  },
+  "id": "VnCLg3CN8gf0RB8D",
+  "tags": []
+}
