@@ -25,7 +25,7 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
       "typeVersion": 1,
       "position": [
-        472,
+        480,
         752
       ],
       "credentials": {
@@ -49,7 +49,7 @@
       "type": "n8n-nodes-base.gmailTool",
       "typeVersion": 2.1,
       "position": [
-        600,
+        608,
         752
       ],
       "webhookId": "e81f3db9-261a-489d-8a78-8f0b11ea3411",
@@ -83,7 +83,8 @@
       "parameters": {
         "sendTo": "galosi.matias@gmail.com",
         "subject": "Tarea completada - Agente Bucle Ludoteca",
-        "message": "=Tarea completada por el Agente de Atención Comercial de Bucle Ludoteca.\\n\\nConsulta recibida: {{ $('Chat Trigger').item.json.chatInput }}\\n\\nRespuesta / resultado del agente:\\n{{ $json.output }}\\n\\nEste mensaje es un reporte automático de observabilidad (Execution Log) para supervisión humana.",
+        "emailType": "text",
+        "message": "=Tarea completada por el Agente de Atención Comercial de Bucle Ludoteca.\n\nConsulta recibida: {{ $('Chat Trigger').item.json.chatInput }}\n\nRespuesta / resultado del agente:\n{{ $json.output }}\n\nEste mensaje es un reporte automático de observabilidad (Execution Log) para supervisión humana.",
         "options": {}
       },
       "id": "12e84560-d47d-4f1a-9690-40782fb32be0",
@@ -156,7 +157,7 @@
     "binaryMode": "separate",
     "availableInMCP": false
   },
-  "versionId": "6d916fd3-e4c2-405a-b5d5-f9a3549a9b06",
+  "versionId": "1acc66ee-b98f-4a53-8718-5cb3c0c311a0",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "b0ddea4295fa60ac9ca4ef686c97a7674f0bef313ede7cd078ccd283326b251e"
