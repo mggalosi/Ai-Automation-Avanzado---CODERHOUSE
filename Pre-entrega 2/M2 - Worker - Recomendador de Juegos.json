@@ -1,0 +1,204 @@
+{
+  "name": "M2 - Worker - Recomendador de Juegos",
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "session_id"
+            },
+            {
+              "name": "mensaje_usuario"
+            }
+          ]
+        }
+      },
+      "id": "1aed18bb-4580-48eb-b4cd-8ac0aefd4d99",
+      "name": "Execute Workflow Trigger",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -720,
+        96
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ 'Mensaje del cliente: ' + $json.mensaje_usuario + '\\n\\nCatalogo disponible (JSON): ' + $json.catalogo_juegos }}",
+        "options": {
+          "systemMessage": "# ROL\nSos el Agente Recomendador de Juegos de Bucle Ludoteca, una tienda de juegos de mesa en Berisso. Operás como Worker especialista dentro de una arquitectura multi-agente: recibís una única consulta ya filtrada por el Manager, la resolvés y devolvés el resultado, sin gestionar el enrutamiento.\n\n# HERRAMIENTAS DISPONIBLES\nTenés acceso a una herramienta de catálogo (Google Sheets) con el listado real de juegos: Distribuidor, Título, Categoría, Precio y Resumen. El resumen por el momento se encuentra en blanco.\n\n# ÁMBITO\nRecomendás juegos de mesa exclusivamente a partir de lo que devuelva la herramienta de catálogo en cada llamada. No tenés columnas explícitas de cantidad de jugadores, edad o duración: esa información, si existe, la tenés que inferir del campo Resumen. Si el Resumen no aporta ese dato para ningún juego candidato, decilo en vez de adivinar.\n\n# OBJETIVO\n1. Consultar la herramienta de catálogo para traer el listado de juegos disponible antes de recomendar.\n2. Interpretar del mensaje del cliente: cantidad de jugadores, edades, categoría preferida y tiempo disponible, cuando estén presentes.\n3. Elegir entre 2 y 3 títulos del resultado de la herramienta que mejor se ajusten por Categoría y por lo que indique el Resumen, con una razón breve para cada uno.\n4. Informar el precio de cada recomendación tal como figura en la columna Precio.\n5. Si el mensaje no trae información suficiente, o si el Resumen no alcanza para confirmar que un juego se ajusta (por ejemplo cantidad de jugadores), pedir la aclaración puntual o aclarar la limitación en vez de inventar.\n\n# REGLAS Y ESCALAMIENTO\n- Nunca recomiendes ni inventes un juego que no esté en el resultado devuelto por la herramienta de catálogo.\n- Nunca inventes precios o categorías distintos de los que aparecen en la planilla.\n- Redactá siempre en español formal, sin desdoblamientos de lenguaje inclusivo (nada de \"todos/as\", \"elles\", \"amigues\").\n- Tenés un límite estricto de 5 iteraciones de razonamiento por consulta.\n- No uses formato Markdown (asteriscos, guiones bajos, etc.) en tu respuesta: escribi en texto plano, el cliente la recibe por Telegram sin renderizado.",
+          "maxIterations": 5
+        }
+      },
+      "id": "3462fd61-325a-4841-9e9a-8bbfcb87e21e",
+      "name": "Agente Recomendador de Juegos",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        -496,
+        96
+      ],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 2000,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{\n  json: {\n    status: \"success\",\n    data: {\n      recomendaciones: $input.item.json.output,\n      worker: \"recomendador_juegos\"\n    }\n  }\n}];"
+      },
+      "id": "32118450-6382-414f-a34a-493bb065c051",
+      "name": "Contrato de Salida - Exito",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -144,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const err = $input.item.json.error;\nreturn [{\n  json: {\n    status: \"error\",\n    data: {\n      motivo: (err && err.message) ? err.message : \"Fallo interno del worker Recomendador de Juegos\",\n      worker: \"recomendador_juegos\"\n    }\n  }\n}];"
+      },
+      "id": "1e37630b-87dd-41df-a911-7d731e3add92",
+      "name": "Contrato de Salida - Error (Contingencia)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -144,
+        192
+      ]
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Usá esta herramienta para traer el catálogo actual de juegos de mesa (hoja \"Catálogo\") antes de armar cualquier recomendación. Devuelve, por cada juego, Distribuidor, Título, Categoría, Precio. Llamala siempre al inicio de la conversación con el cliente, incluso si el pedido es genérico (\"recomendame algo\"), para tener el universo real de opciones antes de elegir. No inventes títulos que no aparezcan en su resultado.",
+        "documentId": {
+          "__rl": true,
+          "value": "1Z64ivu4YwJHT5qr4z5q66jfz56Uyb9aBSe_pdVhlCp8",
+          "mode": "list",
+          "cachedResultName": "Catálogo Juegos de Mesa",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Z64ivu4YwJHT5qr4z5q66jfz56Uyb9aBSe_pdVhlCp8/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 384181670,
+          "mode": "list",
+          "cachedResultName": "Catálogo",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Z64ivu4YwJHT5qr4z5q66jfz56Uyb9aBSe_pdVhlCp8/edit#gid=384181670"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [
+        -368,
+        320
+      ],
+      "id": "cf5d7bf8-7ecf-4a5e-96b8-4878af535c63",
+      "name": "Get row(s) in sheet in Google Sheets",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "vVIl1EWEqnJUlWS9",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4o-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        -640,
+        304
+      ],
+      "id": "cf6b7529-d265-49e3-a6ac-9fe8e6f30d2d",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "ccks2LnpbfRkzAFP",
+          "name": "OpenAi account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Execute Workflow Trigger": {
+      "main": [
+        [
+          {
+            "node": "Agente Recomendador de Juegos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Agente Recomendador de Juegos": {
+      "main": [
+        [
+          {
+            "node": "Contrato de Salida - Exito",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Contrato de Salida - Error (Contingencia)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet in Google Sheets": {
+      "ai_tool": [
+        [
+          {
+            "node": "Agente Recomendador de Juegos",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Agente Recomendador de Juegos",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "7932c436-4d3d-4b83-b771-d467a061a744",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b0ddea4295fa60ac9ca4ef686c97a7674f0bef313ede7cd078ccd283326b251e"
+  },
+  "nodeGroups": [],
+  "id": "YxkbbyRQtMTjsZ2i",
+  "tags": []
+}

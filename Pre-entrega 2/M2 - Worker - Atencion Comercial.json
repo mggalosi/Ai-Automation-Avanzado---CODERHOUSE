@@ -1,0 +1,244 @@
+{
+  "name": "M2 - Worker - Atencion Comercial",
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "session_id",
+              "type": "any"
+            },
+            {
+              "name": "mensaje_usuario"
+            }
+          ]
+        }
+      },
+      "id": "f81965c0-032f-4ede-b530-b2059774b076",
+      "name": "Execute Workflow Trigger",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -544,
+        96
+      ]
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Usa esta herramienta para enviar un correo electrónico interno (a la casilla personal del responsable del emprendimiento, usada por el momento como canal único de notificación) cuando la consulta del cliente requiera intervención humana antes de confirmarse. Activa esta herramienta de forma autónoma en los siguientes casos de negocio:\n(1) el cliente quiere comprar un juego de mesa y pregunta como pagar o coordinar el retiro/envío: el equipo debe contactarlo para cerrar los detalles de la compra;\n(2) el cliente presenta un reclamo, una queja sobre un producto o servicio, o plantea una situación que queda fuera de tu ámbito de respuesta automática.\nNo uses esta herramienta para consultas puramente informativas que ya podes responder vos mismo con la información de tu contexto (por ejemplo, preguntas generales sobre que tipo de juegos vende el local, precios ya cargados, o el horario de atención), para evitar generar ruido innecesario en la bandeja de entrada del equipo.",
+        "sendTo": "galosi.matias@gmail.com",
+        "subject": "={{ $fromAI('asunto', 'Asunto del mail', 'string') }}",
+        "emailType": "text",
+        "message": "={{ $fromAI('cuerpo', 'Cuerpo del mail explicando el caso del cliente', 'string') }}",
+        "options": {}
+      },
+      "id": "4a6055f3-d631-413e-afc9-72ffba8fad5c",
+      "name": "Gmail Tool - Notificar Equipo",
+      "type": "n8n-nodes-base.gmailTool",
+      "typeVersion": 2.1,
+      "position": [
+        -224,
+        320
+      ],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "webhookId": "6f0dd566-192e-41b9-86d3-85e52f88bdb1",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "blKdTkdZWepMlgiq",
+          "name": "Gmail account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{\n  json: {\n    status: \"success\",\n    data: {\n      respuesta: $input.item.json.output,\n      worker: \"atencion_comercial\"\n    }\n  }\n}];"
+      },
+      "id": "3775983d-5ae9-44d1-a263-a9e9f44646af",
+      "name": "Contrato de Salida - Exito",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        144,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const err = $input.item.json.error;\nreturn [{\n  json: {\n    status: \"error\",\n    data: {\n      motivo: (err && err.message) ? err.message : \"Fallo interno del worker de Atencion Comercial\",\n      worker: \"atencion_comercial\"\n    }\n  }\n}];"
+      },
+      "id": "f43b0c09-6051-4327-ae15-983d9db384f8",
+      "name": "Contrato de Salida - Error (Contingencia)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        144,
+        192
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.mensaje_usuario }}",
+        "options": {
+          "systemMessage": "# ROL\nSos el Agente de Atención Comercial de Bucle Ludoteca, una tienda de juegos de mesa localizada en la ciudad de Berisso. Operás como Worker especialista dentro de una arquitectura multi-agente: recibís una única consulta ya filtrada por el Manager, la resolvés y devolvés el resultado, sin gestionar el enrutamiento.\n\n# ÁMBITO\nAtendés únicamente consultas relacionadas con:\n- Catálogo, categoría, disponibilidad y precio de los juegos de mesa (solo venta).\n- Consultas generales sobre horarios y ubicación del local.\n\nNo atendés reclamos de pagos ni disputas legales, no das soporte técnico de otros productos, y no opinás ni actuás sobre temas ajenos al rubro de juegos de mesa.\n\n# HERRAMIENTAS DISPONIBLES\nTenés acceso a una herramienta de catálogo (Google Sheets) con el listado real de juegos: Distribuidor, Título, Categoría, Precio y Resumen. Por el momento el resumen se encuentra en blanco.\n\n# OBJETIVO\n1. Identificar la intención comercial del cliente (consulta informativa, pedido de compra).\n2. Ante cualquier pregunta sobre un juego puntual, su categoría, su precio o su disponibilidad, consultar SIEMPRE la herramienta de catálogo antes de responder. Nunca respondas de memoria ni inventes un dato que debería salir de la planilla.\n3. Si el título consultado no aparece en el catálogo devuelto por la herramienta, informar al cliente que no está disponible actualmente, sin inventar un precio ni asumir que sí lo tenés.\n4. Informar el precio tal como figura en la columna Precio de la planilla, sin aclaraciones ni matices adicionales.\n5. Cuando la consulta implique un pedido concreto (el cliente quiere comprar) o cualquier caso que requiera confirmación humana, notificar por correo al equipo de Bucle Ludoteca usando la herramienta de Gmail disponible.\n\n# REGLAS Y ESCALAMIENTO\n- Nunca confirmes una compra en nombre de Bucle Ludoteca: solo podés avisar por mail para que un humano confirme.\n- Nunca inventes precios, categorías o disponibilidad que no estén en el resultado de la herramienta de catálogo.\n- Si la consulta es ambigua, pedile al cliente una aclaración antes de actuar.\n- Si detectás una queja, un reclamo o una situación fuera de tu ámbito, escalá notificando por mail sin intentar resolverla vos mismo.\n- Redactá siempre en español formal, sin desdoblamientos de lenguaje inclusivo (nada de \"todos/as\", \"elles\", \"amigues\"); usá el masculino genérico estándar o formulaciones neutras convencionales.\n- Tenés un límite estricto de 5 iteraciones de razonamiento por consulta. Si lo alcanzás sin resolver el caso, notificá por mail que la consulta requiere intervención humana.\n- No uses formato Markdown (asteriscos, guiones bajos, etc.) en tu respuesta: escribi en texto plano, el cliente la recibe por Telegram sin renderizado.",
+          "maxIterations": 5
+        }
+      },
+      "id": "851987a6-2f70-48fc-ad0b-0048ae86bfd9",
+      "name": "Agente Atención Comercial",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        -256,
+        96
+      ],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 2000,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Usá esta herramienta para consultar el catálogo real de juegos de mesa (hoja \"Catálogo\") cada vez que el cliente pregunte por un juego específico, su precio, su categoría o si está disponible. La planilla tiene las columnas Distribuidor, Título, Categoría, Precio y Resumen.\nActivá esta herramienta de forma autónoma siempre que la consulta mencione el nombre de un juego, pida el precio de algo, o pregunte qué categorías de juegos vende el local. No la uses para preguntas sobre horarios, ubicación, o para consultas sin relación con el catálogo.",
+        "documentId": {
+          "__rl": true,
+          "value": "1Z64ivu4YwJHT5qr4z5q66jfz56Uyb9aBSe_pdVhlCp8",
+          "mode": "list",
+          "cachedResultName": "Catálogo Juegos de Mesa",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Z64ivu4YwJHT5qr4z5q66jfz56Uyb9aBSe_pdVhlCp8/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 384181670,
+          "mode": "list",
+          "cachedResultName": "Catálogo",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Z64ivu4YwJHT5qr4z5q66jfz56Uyb9aBSe_pdVhlCp8/edit#gid=384181670"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [
+        -48,
+        320
+      ],
+      "id": "93a67c9c-2dae-45c5-8f29-10dddf33c0e5",
+      "name": "Get row(s) in sheet in Google Sheets",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "vVIl1EWEqnJUlWS9",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4o-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        -400,
+        320
+      ],
+      "id": "b09c7e9e-1835-459d-b08c-f2c4936f5937",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "ccks2LnpbfRkzAFP",
+          "name": "OpenAi account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Execute Workflow Trigger": {
+      "main": [
+        [
+          {
+            "node": "Agente Atención Comercial",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail Tool - Notificar Equipo": {
+      "ai_tool": [
+        [
+          {
+            "node": "Agente Atención Comercial",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Agente Atención Comercial": {
+      "main": [
+        [
+          {
+            "node": "Contrato de Salida - Exito",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Contrato de Salida - Error (Contingencia)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet in Google Sheets": {
+      "ai_tool": [
+        [
+          {
+            "node": "Agente Atención Comercial",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Agente Atención Comercial",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "457a16ff-993b-48d2-9617-e5f7e9e161b0",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b0ddea4295fa60ac9ca4ef686c97a7674f0bef313ede7cd078ccd283326b251e"
+  },
+  "nodeGroups": [],
+  "id": "Di9KWkOXtMSOfqrQ",
+  "tags": []
+}

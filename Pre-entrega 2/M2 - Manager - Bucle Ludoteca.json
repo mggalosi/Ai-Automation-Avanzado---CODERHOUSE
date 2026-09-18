@@ -1,0 +1,918 @@
+{
+  "name": "M2 - Manager - Bucle Ludoteca",
+  "nodes": [
+    {
+      "parameters": {
+        "keepOnlySet": true,
+        "values": {
+          "string": [
+            {
+              "name": "session_id",
+              "value": "={{$json.message.chat.id}}"
+            },
+            {
+              "name": "mensaje_usuario",
+              "value": "={{$json.message.text}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "70d3ae09-1a6b-439c-ae6c-5fb2c729c3c0",
+      "name": "Contrato de Entrada",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        -1136,
+        272
+      ]
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"categoria\": {\n      \"type\": \"string\",\n      \"enum\": [\n        \"ATENCION_COMERCIAL\",\n        \"RECOMENDACION_JUEGOS\",\n        \"ESCALAR_HUMANO\"\n      ]\n    },\n    \"razon\": {\n      \"type\": \"string\"\n    }\n  },\n  \"required\": [\n    \"categoria\",\n    \"razon\"\n  ]\n}"
+      },
+      "id": "72be90d1-22b6-4f36-9b03-dd17f6399da6",
+      "name": "Parser - Categoria de Intencion",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.2,
+      "position": [
+        -736,
+        480
+      ]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "8c4fec14-4c4f-47e6-b60f-a7c9a17d4d0e",
+                    "leftValue": "={{ $json.output.categoria }}",
+                    "rightValue": "ATENCION_COMERCIAL",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Atencion Comercial"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "454e22f4-4282-4ac1-989c-a7c272d517bd",
+                    "leftValue": "={{ $json.output.categoria }}",
+                    "rightValue": "RECOMENDACION_JUEGOS",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Recomendacion Juegos"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "acbdde3c-c6a8-4923-9a9b-bb0d0f4523fd",
+                    "leftValue": "={{ $json.output.categoria }}",
+                    "rightValue": "ESCALAR_HUMANO",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Escalar Humano"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra"
+        }
+      },
+      "id": "1d815c92-1a55-40b1-b8e3-c6a9792dee49",
+      "name": "Enrutar por Categoria",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        -560,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "keepOnlySet": true,
+        "values": {
+          "string": [
+            {
+              "name": "session_id",
+              "value": "={{ $('Contrato de Entrada').item.json.session_id }}"
+            },
+            {
+              "name": "mensaje_usuario",
+              "value": "={{ $('Contrato de Entrada').item.json.mensaje_usuario }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "6ead1930-858d-421f-8d68-045b3623556c",
+      "name": "Payload Worker 1 - Atencion Comercial",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        -336,
+        48
+      ]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "session_id",
+              "value": "={{ $('Payload Worker 1 - Atencion Comercial').item.json.session_id }}"
+            },
+            {
+              "name": "worker_invocado",
+              "value": "ATENCION_COMERCIAL"
+            },
+            {
+              "name": "parametros_enviados",
+              "value": "={{ JSON.stringify($('Payload Worker 1 - Atencion Comercial').item.json) }}"
+            },
+            {
+              "name": "respuesta_recibida",
+              "value": "={{ JSON.stringify($json) }}"
+            },
+            {
+              "name": "status",
+              "value": "={{ $json.status }}"
+            },
+            {
+              "name": "respuesta_final",
+              "value": "={{ $json.data.respuesta }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "7b1299ee-9f18-4dd2-9f0e-ff3431c62196",
+      "name": "Fusionar Respuesta - Atencion Comercial",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        560,
+        32
+      ]
+    },
+    {
+      "parameters": {
+        "keepOnlySet": true,
+        "values": {
+          "string": [
+            {
+              "name": "session_id",
+              "value": "={{ $('Contrato de Entrada').item.json.session_id }}"
+            },
+            {
+              "name": "mensaje_usuario",
+              "value": "={{ $('Contrato de Entrada').item.json.mensaje_usuario }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "c1ca87f0-f21c-4213-9b15-ed59773f197a",
+      "name": "Payload Worker 2 - Recomendador de Juegos",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        -336,
+        544
+      ]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "session_id",
+              "value": "={{ $('Payload Worker 2 - Recomendador de Juegos').item.json.session_id }}"
+            },
+            {
+              "name": "worker_invocado",
+              "value": "recomendador_juegos"
+            },
+            {
+              "name": "parametros_enviados",
+              "value": "={{ JSON.stringify($('Payload Worker 2 - Recomendador de Juegos').item.json) }}"
+            },
+            {
+              "name": "respuesta_recibida",
+              "value": "={{ JSON.stringify($json) }}"
+            },
+            {
+              "name": "status",
+              "value": "={{ $json.status }}"
+            },
+            {
+              "name": "respuesta_final",
+              "value": "={{ $json.data.recomendaciones }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a707094d-994c-482b-a718-88f675fd2c71",
+      "name": "Fusionar Respuesta - Recomendador de Juegos",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        560,
+        528
+      ]
+    },
+    {
+      "parameters": {
+        "keepOnlySet": true,
+        "values": {
+          "string": [
+            {
+              "name": "session_id",
+              "value": "={{ $('Contrato de Entrada').item.json.session_id }}"
+            },
+            {
+              "name": "mensaje_usuario",
+              "value": "={{ $('Contrato de Entrada').item.json.mensaje_usuario }}"
+            },
+            {
+              "name": "motivo",
+              "value": "={{ $json.error ? ('Fallo en un Worker: ' + $json.error.message) : ($json.output && $json.output.razon ? $json.output.razon : 'Mensaje del cliente ambiguo o fuera de taxonomia, requiere revision humana') }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "5735663d-2735-4a79-adf4-8c33456cbf74",
+      "name": "Preparar Alerta Supervisor",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        112,
+        272
+      ]
+    },
+    {
+      "parameters": {
+        "sendTo": "galosi.matias@gmail.com",
+        "subject": "=Bucle Ludoteca - Escalamiento a supervisor ({{ $json.session_id }})",
+        "emailType": "text",
+        "message": "=Se requiere intervencion humana.\n\nSession: {{ $json.session_id }}\n\nMensaje del cliente: {{ $json.mensaje_usuario }}\n\nMotivo: {{ $json.motivo }}",
+        "options": {}
+      },
+      "id": "408afb70-20a2-4869-96d0-768a6eb51d7e",
+      "name": "Notificar Supervisor Humano",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        336,
+        272
+      ],
+      "webhookId": "2149f120-5b20-4e83-bf8e-c3b309dff24d",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "blKdTkdZWepMlgiq",
+          "name": "Gmail account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "session_id",
+              "value": "={{ $('Preparar Alerta Supervisor').item.json.session_id }}"
+            },
+            {
+              "name": "worker_invocado",
+              "value": "ninguno_escalado_humano"
+            },
+            {
+              "name": "parametros_enviados",
+              "value": "={{ JSON.stringify($('Preparar Alerta Supervisor').item.json) }}"
+            },
+            {
+              "name": "respuesta_recibida",
+              "value": "={{ JSON.stringify({ status: 'escalado', motivo: $('Preparar Alerta Supervisor').item.json.motivo }) }}"
+            },
+            {
+              "name": "status",
+              "value": "escalado"
+            },
+            {
+              "name": "respuesta_final",
+              "value": "Tu consulta fue derivada a un miembro del equipo, te va a contactar a la brevedad."
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "e4ada313-950f-4b70-ad22-5e17076e57b9",
+      "name": "Formatear Log - Escalamiento",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        560,
+        272
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1Hgrlr2EKPmlikDj71WOnJW93c4qAadR7hprG3lw2soM",
+          "mode": "list",
+          "cachedResultName": "PLACEHOLDER_SPREEDSHEET_ID",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Hgrlr2EKPmlikDj71WOnJW93c4qAadR7hprG3lw2soM/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Log",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Hgrlr2EKPmlikDj71WOnJW93c4qAadR7hprG3lw2soM/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "timestamp": "={{ $now.toISO() }}",
+            "session_id": "={{ $json.session_id }}",
+            "worker_invocado": "={{ $json.worker_invocado }}",
+            "parametros_enviados": "={{ JSON.stringify($json.parametros_enviados) }}",
+            "respuesta_recibida": "={{ JSON.stringify($json.respuesta_recibida) }}",
+            "status": "={{ $json.status }}",
+            "respuesta_final_cliente": "={{ $json.respuesta_final }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "timestamp",
+              "displayName": "timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "session_id",
+              "displayName": "session_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "worker_invocado",
+              "displayName": "worker_invocado",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "parametros_enviados",
+              "displayName": "parametros_enviados",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "respuesta_recibida",
+              "displayName": "respuesta_recibida",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "respuesta_final_cliente",
+              "displayName": "respuesta_final_cliente",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "5eedb864-0c94-4aa6-a2de-c12f3aef800e",
+      "name": "Log de Auditoria - Trazabilidad",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        848,
+        272
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "vVIl1EWEqnJUlWS9",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "updates": [
+          "message",
+          "channel_post"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -1360,
+        272
+      ],
+      "id": "55521f28-daf2-422f-884f-04bff0b0822e",
+      "name": "Telegram Trigger",
+      "webhookId": "efffb0b4-0e99-4d52-b0d2-450143609199",
+      "credentials": {
+        "telegramApi": {
+          "id": "aauwh1AA5YEjm7lP",
+          "name": "Bucle_Ludoteca_bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.session_id }}",
+        "text": "={{ $json.respuesta_final_cliente }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1088,
+        272
+      ],
+      "id": "76735270-e1c4-4395-b4f1-1490b2c3cf6a",
+      "name": "Telegram - Enviar Respuesta",
+      "webhookId": "f48786f1-71e1-4a05-b73b-2761fb5f50f1",
+      "credentials": {
+        "telegramApi": {
+          "id": "aauwh1AA5YEjm7lP",
+          "name": "Bucle_Ludoteca_bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "YxkbbyRQtMTjsZ2i",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/YxkbbyRQtMTjsZ2i",
+          "cachedResultName": "M2 - Worker - Recomendador de Juegos"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "session_id": "={{ $json.session_id }}",
+            "mensaje_usuario": "={{ $json.mensaje_usuario }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "session_id",
+              "displayName": "session_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "mensaje_usuario",
+              "displayName": "mensaje_usuario",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": true,
+          "convertFieldsToString": true
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "id": "f80b054c-6262-4868-9f07-743f5e3f2849",
+      "name": "Worker - Recomendador de Juegos",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        -112,
+        544
+      ],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 3000,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "Di9KWkOXtMSOfqrQ",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/Di9KWkOXtMSOfqrQ",
+          "cachedResultName": "M2 - Worker - Atencion Comercial"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "session_id": "={{ $json.session_id }}",
+            "mensaje_usuario": "={{ $json.mensaje_usuario }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "session_id",
+              "displayName": "session_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "mensaje_usuario",
+              "displayName": "mensaje_usuario",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": true,
+          "convertFieldsToString": true
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "id": "e9191623-fdea-45a4-97df-c18e73f0b914",
+      "name": "Worker - Atencion Comercial",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        -112,
+        48
+      ],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 3000,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.mensaje_usuario }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "# ROL\nSos el Router de Intenciones del sistema multi-agente de Bucle Ludoteca. Tu única función es clasificar el mensaje del cliente dentro de una taxonomía cerrada de negocio. Nunca respondes directamente al cliente.\n\n# AMBITO\nAnalizas el campo mensaje_usuario y lo clasificas en una y solo una de estas categorías:\n- ATENCION_COMERCIAL: consultas sobre catálogo, precios, horarios, ubicación o pedidos de compra, siempre que sean consultas previas a la venta (información, disponibilidad, precio).\n- RECOMENDACION_JUEGOS: el cliente pide que le recomienden o sugieran un juego de mesa según cantidad de jugadores, edades, tipo de juego o tiempo disponible.\n- ESCALAR_HUMANO: el mensaje es un reclamo o una queja (pedido no entregado, producto con fallas, error de facturación, devolución, o cualquier problema posterior a una compra), es ambiguo, no encaja claramente en ninguna categoría anterior, contiene lenguaje agresivo, o el cliente pide explícitamente hablar con una persona.\n\n# OBJETIVO\nDevolver siempre un objeto con la categoría elegida y una razón breve (una oración) de por qué corresponde esa categoría.\n\n# REGLAS Y ESCALAMIENTO\n- Nunca inventes una cuarta categoría ni combines dos categorías en una respuesta.\n- Un reclamo o una queja SIEMPRE clasifica como ESCALAR_HUMANO, incluso si menciona un producto o precio del catálogo.\n- Ante la duda entre dos categorías, priorizar ESCALAR_HUMANO antes que adivinar.\n- No redactes una respuesta para el cliente: tu única salida es la clasificación estructurada.\n- Redacta la razón en español formal, sin desdoblamientos de lenguaje inclusivo.",
+          "maxIterations": 3
+        }
+      },
+      "id": "1f5ebac0-390e-4141-8938-f7fd29349495",
+      "name": "Router (Triaje)",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        -912,
+        272
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4o-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        -976,
+        480
+      ],
+      "id": "39ca4f1a-bd9f-43c6-8191-e47e88b3bb20",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "ccks2LnpbfRkzAFP",
+          "name": "OpenAi account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Contrato de Entrada": {
+      "main": [
+        [
+          {
+            "node": "Router (Triaje)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parser - Categoria de Intencion": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Router (Triaje)",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enrutar por Categoria": {
+      "main": [
+        [
+          {
+            "node": "Payload Worker 1 - Atencion Comercial",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Payload Worker 2 - Recomendador de Juegos",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Preparar Alerta Supervisor",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Preparar Alerta Supervisor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Payload Worker 1 - Atencion Comercial": {
+      "main": [
+        [
+          {
+            "node": "Worker - Atencion Comercial",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fusionar Respuesta - Atencion Comercial": {
+      "main": [
+        [
+          {
+            "node": "Log de Auditoria - Trazabilidad",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Payload Worker 2 - Recomendador de Juegos": {
+      "main": [
+        [
+          {
+            "node": "Worker - Recomendador de Juegos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fusionar Respuesta - Recomendador de Juegos": {
+      "main": [
+        [
+          {
+            "node": "Log de Auditoria - Trazabilidad",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Preparar Alerta Supervisor": {
+      "main": [
+        [
+          {
+            "node": "Notificar Supervisor Humano",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Notificar Supervisor Humano": {
+      "main": [
+        [
+          {
+            "node": "Formatear Log - Escalamiento",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Formatear Log - Escalamiento": {
+      "main": [
+        [
+          {
+            "node": "Log de Auditoria - Trazabilidad",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Contrato de Entrada",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram - Enviar Respuesta": {
+      "main": [
+        []
+      ]
+    },
+    "Worker - Recomendador de Juegos": {
+      "main": [
+        [
+          {
+            "node": "Fusionar Respuesta - Recomendador de Juegos",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Preparar Alerta Supervisor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Worker - Atencion Comercial": {
+      "main": [
+        [
+          {
+            "node": "Fusionar Respuesta - Atencion Comercial",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Preparar Alerta Supervisor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Router (Triaje)": {
+      "main": [
+        [
+          {
+            "node": "Enrutar por Categoria",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Router (Triaje)",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log de Auditoria - Trazabilidad": {
+      "main": [
+        [
+          {
+            "node": "Telegram - Enviar Respuesta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "aaed3687-8b3b-466b-b7b0-b9ef74f40166",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b0ddea4295fa60ac9ca4ef686c97a7674f0bef313ede7cd078ccd283326b251e"
+  },
+  "nodeGroups": [],
+  "id": "UKvapdiRkJNq2JUj",
+  "tags": []
+}
